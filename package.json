@@ -1,0 +1,44 @@
+{
+	"name": "mindenit-id",
+	"version": "0.0.0",
+	"description": "Mindenit auth provider",
+	"type": "module",
+	"scripts": {
+		"lint": "eslint .",
+		"format": "prettier --write .",
+		"prepare": "husky",
+		"docker:start": "docker compose up -d",
+		"docker:start:dev": "docker compose up -d db dragonfly",
+		"docker:stop": "docker compose down"
+	},
+	"author": {
+		"name": "Kyrylo Savieliev",
+		"url": "https://github.com/OneLiL05",
+		"email": "k_savieliev@icloud.com"
+	},
+	"license": "GPL-3.0-only",
+	"engines": {
+		"node": ">=22.x"
+	},
+	"lint-staged": {
+		"**/*.{js,ts,tsx}": [
+			"eslint --fix"
+		],
+		"**/*": "prettier --write --ignore-unknown"
+	},
+	"devDependencies": {
+		"@commitlint/cli": "^19.6.1",
+		"@commitlint/config-conventional": "^19.6.0",
+		"@eslint/js": "^9.18.0",
+		"eslint": "^9.18.0",
+		"eslint-config-prettier": "^10.0.1",
+		"eslint-plugin-prettier": "^5.2.2",
+		"eslint-plugin-vue": "^9.32.0",
+		"globals": "^15.14.0",
+		"husky": "^9.1.7",
+		"lint-staged": "^15.4.1",
+		"prettier": "^3.4.2",
+		"typescript-eslint": "^8.20.0"
+	},
+	"packageManager": "pnpm@9.12.3"
+}

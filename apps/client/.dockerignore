@@ -1,0 +1,10 @@
+node_modules
+.gitignore
+.git
+.vscode
+.husky
+.env
+README.md
+dist
+.nuxt
+.output
