@@ -1,7 +1,9 @@
 version: '3.8'
+
 networks:
   dev:
     driver: bridge
+
 services:
   db:
     image: 'postgres:latest'
@@ -15,20 +17,25 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+    ports:
+      - "${POSTGRES_PORT}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
       - dev
     logging:
-      driver: 'json-file'
+      driver: "json-file"
       options:
-        max-size: '10m'
-        max-file: '3'
+        max-size: "10m"
+        max-file: "3"
+
   dragonfly:
     image: 'docker.dragonflydb.io/dragonflydb/dragonfly'
     restart: always
@@ -37,23 +44,26 @@ services:
         limits:
           cpus: '0.3'
           memory: 1.5G
-    command: ['--requirepass', '${REDIS_PASSWORD}']
+    command: ["--requirepass", "${REDIS_PASSWORD}"]
     ulimits:
       memlock: -1
     volumes:
       - dragonflydata:/data
     networks:
       - dev
+    ports:
+      - "6379:6379"
     healthcheck:
-      test: ['CMD', 'redis-cli', '-a', '${REDIS_PASSWORD}', 'ping']
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
     logging:
-      driver: 'json-file'
+      driver: "json-file"
       options:
-        max-size: '10m'
-        max-file: '3'
+        max-size: "10m"
+        max-file: "3"
+
   pgbackups:
     image: prodrigestivill/postgres-backup-local
     restart: always
@@ -83,59 +93,63 @@ services:
     networks:
       - dev
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:8080/health']
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3
+
   api:
     build: ./apps/server
     container_name: id-server
+    restart: always
     ports:
-      - '8080:8080'
+      - "${PORT}:8080"
     depends_on:
       db:
         condition: service_healthy
       dragonfly:
         condition: service_healthy
     environment:
+      - PORT=${PORT}
       - POSTGRES_HOST=db
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_EXTRA_OPTS=-Z1 --schema=public --blobs
-      - SCHEDULE=@daily
-      - BACKUP_ON_START=TRUE
-      - BACKUP_KEEP_DAYS=7
-      - BACKUP_KEEP_WEEKS=4
-      - BACKUP_KEEP_MONTHS=6
-      - HEALTHCHECK_PORT=8080
+      - POSTGRES_PORT=5432
+      - COOKIE_SECRET=${COOKIE_SECRET}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - NODE_ENV=${NODE_ENV}
+      - REDIS_URL=${REDIS_URL}
     networks:
       - dev
     logging:
-      driver: 'json-file'
+      driver: "json-file"
       options:
-        max-size: '10m'
-        max-file: '3'
+        max-size: "10m"
+        max-file: "3"
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:4040/api/health']
+      test: ["CMD", "curl", "-f", "http://localhost:${PORT}/api/health"]
       interval: 30s
       timeout: 10s
       retries: 5
+
   client:
     build: ./apps/client
     container_name: id-client
+    restart: always
     ports:
-      - '3000:3000'
+      - "3000:3000"
     depends_on:
       api:
         condition: service_healthy
     networks:
       - dev
     logging:
-      driver: 'json-file'
+      driver: "json-file"
       options:
-        max-size: '10m'
-        max-file: '3'
+        max-size: "10m"
+        max-file: "3"
+
 volumes:
   pgdata:
   dragonflydata:
