@@ -15,6 +15,7 @@ export class CookieService implements ICookieService {
 			)
 		}
 	}
+
 	deleteTokenCookie(reply: FastifyReply): void {
 		if (process.env.NODE_ENV === 'production') {
 			reply.header(

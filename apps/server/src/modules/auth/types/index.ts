@@ -19,7 +19,6 @@ interface IPasswordService {
 }
 
 interface ISessionsService {
-	generateToken: () => string
 	createOne: (token: string, userId: number) => Promise<Session>
 	validateToken: (token: string) => Promise<Result<SessionValidation, null>>
 	invalidateOne: (sessionId: string) => Promise<void>

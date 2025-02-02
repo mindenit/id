@@ -1,4 +1,6 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
+import { throwHttpError } from '../utils/error.js'
+import { NOT_AUTHENTIFICATED_ERR } from '../constants/errors.js'
 
 export const sessionGuard = async (
 	request: FastifyRequest,
@@ -8,12 +10,16 @@ export const sessionGuard = async (
 	const token = request.cookies.session
 
 	if (!token) {
-		return reply.status(401).send({ message: '' })
+		return throwHttpError(reply, NOT_AUTHENTIFICATED_ERR)
 	}
 
 	const result = await sessionService.validateToken(token)
 
-	if (!result.success) return
+	if (!result.success) {
+		return throwHttpError(reply, NOT_AUTHENTIFICATED_ERR)
+	}
+
+	console.log('Guard', result.value)
 
 	request.user = result.value.user
 	request.session = result.value.session
