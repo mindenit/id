@@ -11,7 +11,7 @@ const TOO_MANY_REQUESTS_ERR: HttpError = {
 }
 
 const NOT_AUTHENTIFICATED_ERR: HttpError = {
-	status: 400,
+	status: 401,
 	message: 'Not authentificated',
 }
 

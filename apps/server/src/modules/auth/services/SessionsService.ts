@@ -1,34 +1,21 @@
-import {
-	encodeBase32LowerCaseNoPadding,
-	encodeHexLowerCase,
-} from '@oslojs/encoding'
+import { DatabaseClient } from '@/core/types/index.js'
+import { Failure, Result, Success } from '@/core/utils/result.js'
+import { sessionTable, userTable } from '@/db/schema.js'
+import { Session } from '@/db/types.js'
+import { sha256 } from '@oslojs/crypto/sha2'
+import { encodeHexLowerCase } from '@oslojs/encoding'
+import { eq } from 'drizzle-orm'
 import {
 	AuthInjectableDependencies,
 	ISessionsService,
 	SessionValidation,
 } from '../types/index.js'
-import { DatabaseClient } from '@/core/types/index.js'
-import { Session } from '@/db/types.js'
-import { sha256 } from '@oslojs/crypto/sha2'
-import { sessionTable, userTable } from '@/db/schema.js'
-import { Failure, Result, Success } from '@/core/utils/result.js'
-import { eq } from 'drizzle-orm'
 
 export class SessionsService implements ISessionsService {
 	private readonly db: DatabaseClient
 
 	constructor({ db }: AuthInjectableDependencies) {
 		this.db = db.client
-	}
-
-	generateToken(): string {
-		const bytes = new Uint8Array(20)
-
-		crypto.getRandomValues(bytes)
-
-		const token = encodeBase32LowerCaseNoPadding(bytes)
-
-		return token
 	}
 
 	async createOne(token: string, userId: number): Promise<Session> {
@@ -55,7 +42,11 @@ export class SessionsService implements ISessionsService {
 
 		const result = await this.db
 			.select({
-				user: userTable,
+				user: {
+					id: userTable.id,
+					username: userTable.username,
+					email: userTable.email,
+				},
 				session: sessionTable,
 			})
 			.from(sessionTable)
