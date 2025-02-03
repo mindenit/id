@@ -1,8 +1,12 @@
 version: '3.8'
-
 networks:
   dev:
     driver: bridge
+
+volumes:
+  pgdata:
+  dragonflydata:
+  minio-data:
 
 services:
   db:
@@ -98,6 +102,37 @@ services:
       timeout: 10s
       retries: 3
 
+  minio:
+    image: minio/minio
+    restart: always
+    container_name: minio
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 2G
+    volumes:
+      - minio-data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - dev
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   api:
     build: ./apps/server
     container_name: id-server
@@ -108,6 +143,8 @@ services:
       db:
         condition: service_healthy
       dragonfly:
+        condition: service_healthy
+      minio:
         condition: service_healthy
     environment:
       - PORT=${PORT}
@@ -120,6 +157,10 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - NODE_ENV=${NODE_ENV}
       - REDIS_URL=${REDIS_URL}
+      - MINIO_ENDPOINT=minio
+      - MINIO_PORT=9000
+      - MINIO_ACCESS_KEY=${MINIO_ROOT_USER}
+      - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD}
     networks:
       - dev
     logging:
@@ -143,7 +184,3 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-
-volumes:
-  pgdata:
-  dragonflydata:
